@@ -10,6 +10,7 @@ TODO:
 
 - [ ] Write an example ROM for every recipe
 - [ ] Expand with other interesting techniques
+    - [ ] Asar functionality
     - [ ] PPU visual effects & math acceleration
     - [ ] Tool-specific gotchas and information
     - [ ] SA-1
