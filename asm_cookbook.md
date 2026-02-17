@@ -58,6 +58,67 @@ code:
 
 This setup isn't common. Since this instruction is only available as (dp,x), it's stuck in bank 0 and thus is really limited to low ram, since in smw hacking you don't have much control over bank 0. Furthermore, it doesn't let you add an offset to the pointer in memory, meaning you have to modify the contents of memory to be able to fully use this technique. However, if you just so happen to have to keep track of multiple parallel streams of data, or if you have sprite tables with a stride of 2, being aware of this addressing mode might help.
 
+## Jump tables
+
+`ExecutePtr` and `ExecutePtrLong` are SMW routines that allow you to implement jump tables. They are convenient, but, unfortunately, not very good. Here are some alternatives:
+
+### Using X
+
+The fastest method is using the `jsr (table,x)` instruction.
+
+```
+code:
+    ldx offset
+    jsr (routine_ptrs,x)
+    rts
+
+routine_ptrs:
+    dw .rt1
+    dw .rt2
+.rt1:
+.rt2:
+    ...
+```
+
+### Preserving X or using Y
+
+In case you need X to be preserved into the routine, use a table read instead. If Y needs to be preserved as well, add phy/ply as necessary.
+
+```
+code:
+    ldy offset
+    lda routine_ptrs,y
+    sta $00
+    jmp (!dp)   ; note: this is an absolute address!
+
+routine_ptrs:
+    dw .rt1
+    dw .rt2
+.rt1:
+.rt2:
+    ...
+```
+
+### Using long pointers
+
+```
+code:
+    ldy offset
+    lda routine_ptrs,y
+    sta $00
+    lda routine_ptrs+2,y
+    sta $02
+    jmp [!dp]   ; note: this is an absolute address!
+
+routine_ptrs:
+    dl .rt1
+    dl .rt2
+.rt1:
+.rt2:
+    ...
+```
+
+Tip: if you store indices into a table rather than byte offsets, and you don't want to multiply by 3, use the `dd` command for your pointer table. That way, each pointer is 4 bytes, and a simple `asl #2` will multiply by 4 instead. Or, you can even store some metadata in the pointer itself! Works well for adding lightweight arguments to routines.
 
 ## Stack nonsense
 
