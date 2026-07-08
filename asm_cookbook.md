@@ -413,12 +413,36 @@ code:
     rts
 ```
 
+## Code pointer math
 
+Sometimes you may want to shift bits by a dynamic amount, perhaps as a part of a VWF renderer. A loop would have some overhead, especially for high shift amounts:
 
+```
+    lda value
+    ldx amount
+.loop:
+    asl
+    dex
+    bne .loop
+; 7n+7 CPU cycles
+```
+Let's unroll this loop instead and use pointer math to get where we want to be.
 
+```
+; A = amount to shift left
+    lda #shifts_end
+    sec : sbc #shifts
+    sta temp
+    lda value
+    jmp (temp)
 
+shifts:
+    asl #16
+.end:
+    
+; 2n+23 CPU cycles
+```
 
+This requires a much heftier setup, but the new approach wins for shifts anywhere from 4 to 15.
 
-
-
-
+Of course, this approach is only meaningful when you have to shift every value by a different amount. For something like a VWF renderer, you can cache a code pointer with the most optimal routine or even unroll the shifting loop - or even precompute the font for every bitshift if you have space to spare.
